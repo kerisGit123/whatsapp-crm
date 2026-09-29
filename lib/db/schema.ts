@@ -92,6 +92,7 @@ export const invoices = pgTable(
     currency: text("currency").notNull().default("USD"),
     totalCents: integer("total_cents").notNull().default(0),
     status: text("status").notNull().default("draft"), // draft | sent | paid | void
+    dueDate: timestamp("due_date", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

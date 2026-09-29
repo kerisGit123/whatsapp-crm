@@ -2,8 +2,15 @@ import { requireOrgId } from "@/lib/auth";
 import { listContacts } from "@/lib/db/contacts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { InvoiceLineItemsForm } from "@/components/invoice-line-items-form";
 import { createInvoiceAction } from "../actions";
+
+function defaultDueDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toISOString().slice(0, 10);
+}
 
 export default async function NewInvoicePage() {
   const orgId = await requireOrgId();
@@ -36,6 +43,13 @@ export default async function NewInvoicePage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium" htmlFor="dueDate">
+                Due date
+              </label>
+              <Input id="dueDate" name="dueDate" type="date" defaultValue={defaultDueDate()} />
             </div>
 
             <input type="hidden" name="currency" value="USD" />

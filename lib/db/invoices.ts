@@ -34,7 +34,12 @@ export function computeTotalCents(lineItems: InvoiceLineItem[]): number {
 
 export async function createInvoice(
   orgId: string,
-  input: { contactId: string; lineItems: InvoiceLineItem[]; currency: string },
+  input: {
+    contactId: string;
+    lineItems: InvoiceLineItem[];
+    currency: string;
+    dueDate?: Date | null;
+  },
 ): Promise<Invoice> {
   const number = await nextInvoiceNumber(orgId);
   const [row] = await db
@@ -47,6 +52,7 @@ export async function createInvoice(
       currency: input.currency,
       totalCents: computeTotalCents(input.lineItems),
       status: "draft",
+      dueDate: input.dueDate ?? null,
     })
     .returning();
   return row;

@@ -29,7 +29,8 @@ export default async function InvoiceDetailPage({
         <div>
           <h1 className="text-xl font-semibold">{invoice.number}</h1>
           <p className="text-sm text-muted-foreground">
-            {invoice.createdAt.toLocaleDateString()}
+            Issued {invoice.createdAt.toLocaleDateString()}
+            {invoice.dueDate && ` · Due ${invoice.dueDate.toLocaleDateString()}`}
           </p>
         </div>
         <div className="flex items-center gap-2">

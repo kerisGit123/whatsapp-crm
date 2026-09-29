@@ -25,6 +25,9 @@ export async function createInvoiceAction(formData: FormData) {
 
   if (lineItems.length === 0) throw new Error("At least one line item is required");
 
-  const invoice = await createInvoice(orgId, { contactId, lineItems, currency });
+  const dueDateInput = String(formData.get("dueDate") ?? "");
+  const dueDate = dueDateInput ? new Date(dueDateInput) : null;
+
+  const invoice = await createInvoice(orgId, { contactId, lineItems, currency, dueDate });
   redirect(`/invoices/${invoice.id}`);
 }

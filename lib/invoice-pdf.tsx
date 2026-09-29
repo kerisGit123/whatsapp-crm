@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import type { Invoice, Contact } from "@/lib/db/schema";
 
 const BRAND_GREEN = "#25D366";
@@ -154,4 +154,8 @@ export function InvoicePdfDocument({ invoice, contact }: { invoice: Invoice; con
       </Page>
     </Document>
   );
+}
+
+export async function renderInvoicePdfBuffer(invoice: Invoice, contact: Contact): Promise<Buffer> {
+  return renderToBuffer(<InvoicePdfDocument invoice={invoice} contact={contact} />);
 }

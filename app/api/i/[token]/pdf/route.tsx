@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
-import { requireOrgId } from "@/lib/auth";
-import { getInvoice } from "@/lib/db/invoices";
+import { getInvoiceByShareToken } from "@/lib/db/invoices";
 import { getContact } from "@/lib/db/contacts";
 import { renderInvoicePdfBuffer } from "@/lib/invoice-pdf";
 
 export const runtime = "nodejs";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const orgId = await requireOrgId();
+/** Public, unauthenticated — this is the link sent over WhatsApp. Access
+ *  control is the share token itself, not a session. */
+export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
 
-  const invoice = await getInvoice(orgId, id);
+  const invoice = await getInvoiceByShareToken(token);
   if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const contact = await getContact(orgId, invoice.contactId);
-  if (!contact) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  const contact = await getContact(invoice.orgId, invoice.contactId);
+  if (!contact) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const buffer = await renderInvoicePdfBuffer(invoice, contact);
 

@@ -5,7 +5,8 @@ import { getContact } from "@/lib/db/contacts";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, MessageCircle } from "lucide-react";
+import { sendInvoiceWhatsappAction } from "../actions";
 
 function formatCents(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
@@ -22,6 +23,7 @@ export default async function InvoiceDetailPage({
   if (!invoice) notFound();
 
   const contact = await getContact(orgId, invoice.contactId);
+  const sendWhatsapp = sendInvoiceWhatsappAction.bind(null, invoice.id);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-8">
@@ -41,6 +43,12 @@ export default async function InvoiceDetailPage({
               PDF
             </Button>
           </a>
+          <form action={sendWhatsapp}>
+            <Button type="submit">
+              <MessageCircle className="size-4" />
+              Send via WhatsApp
+            </Button>
+          </form>
         </div>
       </div>
 

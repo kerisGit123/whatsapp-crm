@@ -18,6 +18,18 @@ export async function getInvoice(orgId: string, invoiceId: string): Promise<Invo
   return row;
 }
 
+/** No orgId filter — the share token itself (122 bits of randomness) is the
+ *  access control for this public, unauthenticated lookup. */
+export async function getInvoiceByShareToken(token: string): Promise<Invoice | undefined> {
+  const [row] = await db.select().from(invoices).where(eq(invoices.shareToken, token));
+  return row;
+}
+
+export function invoicePublicUrl(invoice: Invoice): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return `${base}/api/i/${invoice.shareToken}/pdf`;
+}
+
 /** Sequential per-org invoice number, e.g. INV-0001. Not race-proof under
  *  concurrent creates — acceptable for v1's expected usage volume. */
 export async function nextInvoiceNumber(orgId: string): Promise<string> {

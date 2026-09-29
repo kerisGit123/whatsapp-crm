@@ -93,12 +93,15 @@ export const invoices = pgTable(
     totalCents: integer("total_cents").notNull().default(0),
     status: text("status").notNull().default("draft"), // draft | sent | paid | void
     dueDate: timestamp("due_date", { withTimezone: true }),
+    // Unguessable id for the public, unauthenticated PDF link sent over WhatsApp.
+    shareToken: uuid("share_token").defaultRandom().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
     uniqueIndex("invoices_org_number_uq").on(t.orgId, t.number),
     index("invoices_org_contact_idx").on(t.orgId, t.contactId),
+    uniqueIndex("invoices_share_token_uq").on(t.shareToken),
   ],
 );
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,22 +24,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ClerkProvider>
-          <header className="flex items-center justify-between border-b px-4 py-3">
-            <span className="font-semibold">WhatsApp CRM</span>
-            <Show when="signed-out">
-              <div className="flex gap-2">
-                <SignInButton />
-                <SignUpButton />
-              </div>
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
-          </header>
-          <main className="flex-1">{children}</main>
-        </ClerkProvider>
+      <body className="min-h-full flex flex-col bg-background">
+        <ClerkProvider>{children}</ClerkProvider>
       </body>
     </html>
   );

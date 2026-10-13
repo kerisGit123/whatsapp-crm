@@ -71,6 +71,10 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
       </ul>
       {request.notes ? <p className="text-sm text-muted-foreground">{request.notes}</p> : null}
 
+      <a href={`/api/stock/export?kind=request&request=${request.id}`} className="inline-block text-sm underline">
+        Delivery note / picking list (Excel)
+      </a>
+
       <RequestActions id={request.id} status={request.status} lines={lines} isManager={role === "manager"} hasShort={unresolvedShort(request).length > 0} />
     </div>
   );

@@ -2,6 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { stockTakeAction } from "@/app/(dashboard)/stock/actions";
+import { readCountsAction } from "@/app/(dashboard)/stock/excel/actions";
+import { fileToBase64 } from "@/lib/file-base64";
 import { cartonsAndUnits, type StockItem } from "@/lib/stock/rules";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +29,20 @@ export function TakeForm({ items, balances }: { items: StockItem[]; balances: Re
   const filled = Object.entries(counts).filter(([, v]) => v !== "");
   const differences = filled.filter(([id, v]) => Math.round((Number(v) - (balances[id] ?? 0)) * 100) !== 0).length;
 
+  const fromExcel = (file: File | undefined) => {
+    if (!file) return;
+    setMsg(null);
+    start(async () => {
+      try {
+        const r = await readCountsAction(await fileToBase64(file));
+        if (r.ok && r.counts) setCounts((prev) => ({ ...prev, ...Object.fromEntries(r.counts!.map((c) => [c.itemId, String(c.units)])) }));
+        setMsg({ ok: r.ok, text: r.message });
+      } catch (error) {
+        setMsg({ ok: false, text: error instanceof Error ? error.message : "Could not read that file." });
+      }
+    });
+  };
+
   const save = () => {
     setMsg(null);
     start(async () => {
@@ -50,6 +66,15 @@ export function TakeForm({ items, balances }: { items: StockItem[]; balances: Re
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11 rounded-lg border bg-background px-3 text-base" />
       </div>
       <p className="text-sm text-muted-foreground">Type what you counted in units. Leave blank what you did not count.</p>
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <a href="/api/stock/export?kind=count" className="underline">
+          Download the count sheet (Excel)
+        </a>
+        <label className="cursor-pointer underline">
+          Fill from a filled-in sheet
+          <input type="file" accept=".xlsx" className="hidden" onChange={(e) => fromExcel(e.target.files?.[0])} />
+        </label>
+      </div>
       <ul className="divide-y rounded-lg border">
         {shown.map((i) => {
           const expected = balances[i.id] ?? 0;

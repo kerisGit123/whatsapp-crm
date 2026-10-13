@@ -85,6 +85,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       {order.notes ? <p className="text-sm text-muted-foreground">{order.notes}</p> : null}
 
       {role === "manager" ? (
+        <a href={`/api/stock/export?kind=po&order=${order.id}`} className="inline-block text-sm underline">
+          Download this order (Excel)
+        </a>
+      ) : null}
+      {role === "manager" ? (
         <OrderActions orderId={order.id} status={order.status} phone={order.supplierPhone} whatsappText={whatsappText} hasReceived={progress.received > 0} />
       ) : null}
       {canReceive && receiveLines.length > 0 ? <ReceiveForm orderId={order.id} lines={receiveLines} showPrices={role === "manager"} /> : null}

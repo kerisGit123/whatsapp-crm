@@ -59,7 +59,7 @@ try {
     .values({ orgId, number, supplier: "Acme", orderDate: today, status: "SENT", lines: [{ itemId: item.id, orderedUnits: 32, cartonPrice: 160 }] })
     .returning();
   check("next order number", (await nextOrderNumber(orgId, "2026")) === "ORD-2026-0002");
-  let orders = await loadOrders(orgId);
+  const orders = await loadOrders(orgId);
   let fresh = await loadStockData(orgId);
   check("on order 32 before delivery", onOrderUnits(orders, fresh.movements).get(item.id) === 32);
   await insertMovements(orgId, "Test", [{ itemId: item.id, data: { date: today, type: "PURCHASE", quantity: 24, unitCost: 20, orderId: order.id, batchId: "rcv1" } }]);

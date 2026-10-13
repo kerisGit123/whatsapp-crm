@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Plus, ClipboardCheck, Zap, History, SlidersHorizontal, Truck, Store } from "lucide-react";
+import { Plus, ClipboardCheck, Zap, History, SlidersHorizontal, Truck, Store, CalendarCheck, FileSpreadsheet } from "lucide-react";
 import { getRole, requireOrgId } from "@/lib/auth";
 import { loadStockData, todayIso } from "@/lib/db/stock";
-import { loadOrders } from "@/lib/db/stock-orders";
-import { onOrderUnits, orderAttention } from "@/lib/stock/orders";
+import { loadOrders, loadRequests } from "@/lib/db/stock-orders";
+import { stockAlerts } from "@/lib/stock/alerts";
+import { onOrderUnits } from "@/lib/stock/orders";
 import { cartonsAndUnits, expiryState, stockStatus, type StockFlag } from "@/lib/stock/rules";
 import { stockGroupLabel } from "@/lib/stock/types";
 import { buttonVariants } from "@/components/ui/button";
@@ -33,9 +34,19 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
   const orgId = await requireOrgId();
   const role = await getRole();
   const today = todayIso();
-  const [{ items, byItem, movements, rule }, orders] = await Promise.all([loadStockData(orgId), loadOrders(orgId)]);
+  const [{ items, byItem, movements, rule }, orders, requests] = await Promise.all([loadStockData(orgId), loadOrders(orgId), loadRequests(orgId)]);
   const onOrder = onOrderUnits(orders, movements);
-  const lateOrders = orders.filter((o) => orderAttention(o, movements, today, rule.leadDays ?? 0) !== null).length;
+  const [alert] = stockAlerts({ items, movements, orders, requests, owners: [{ id: orgId, rule }] }, today);
+  const notes: Array<{ href: string; text: string; tone: string }> = [
+    { href: "/stock?show=ORDER", text: `${alert.orderNow} to order`, tone: alert.orderNow > 0 ? "red" : "" },
+    { href: "/stock?show=EXPIRY", text: `${alert.expiredItems} expired (RM ${Math.round(alert.expiredValue)})`, tone: alert.expiredItems > 0 ? "red" : "" },
+    { href: "/stock?show=EXPIRY", text: `${alert.expiringItems} expiring in 30 days`, tone: alert.expiringItems > 0 ? "amber" : "" },
+    { href: "/stock/requests", text: `${alert.requestsToIssue} requests to issue`, tone: alert.requestsToIssue > 0 ? "amber" : "" },
+    { href: "/stock/requests", text: `${alert.awaitingReceipt} deliveries to confirm`, tone: alert.awaitingReceipt > 0 ? "amber" : "" },
+    { href: "/stock/requests", text: `${alert.requestsShort} short deliveries`, tone: alert.requestsShort > 0 ? "red" : "" },
+    { href: "/stock/orders", text: `${alert.late} late orders`, tone: alert.late > 0 ? "red" : "" },
+    { href: "/stock/orders", text: `${alert.partlyReceived} part-received orders (${alert.stillToComeItems} items to come)`, tone: alert.partlyReceived > 0 ? "amber" : "" },
+  ].filter((n) => n.tone);
 
   const all = items
     .filter((i) => i.status !== "DISCONTINUED")
@@ -67,6 +78,8 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
               { href: "/stock/orders", label: "Orders to suppliers", icon: Truck, show: true },
               { href: "/stock/requests", label: "Branch requests", icon: Store, show: true },
               { href: "/stock/history", label: "History", icon: History, show: true },
+              { href: "/stock/excel", label: "Excel: import / export", icon: FileSpreadsheet, show: true },
+              { href: "/stock/month-end", label: "Month end", icon: CalendarCheck, show: role === "manager" },
               { href: "/stock/items/new", label: "Add item", icon: Plus, show: role === "manager" },
               { href: "/stock/rules", label: "Re-order rules", icon: SlidersHorizontal, show: role === "manager" },
             ]
@@ -80,10 +93,14 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         </details>
       </div>
 
-      {lateOrders > 0 ? (
-        <Link href="/stock/orders" className="mb-4 block rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-          {lateOrders} order{lateOrders === 1 ? " needs" : "s need"} a look: goods are late or only partly arrived.
-        </Link>
+      {notes.length > 0 ? (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {notes.map((n) => (
+            <Link key={n.text} href={n.href} className={cn("rounded-full px-3 py-1.5 text-sm", n.tone === "red" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900")}>
+              {n.text}
+            </Link>
+          ))}
+        </div>
       ) : null}
 
       <div className="mb-4 grid grid-cols-3 gap-2 text-sm">

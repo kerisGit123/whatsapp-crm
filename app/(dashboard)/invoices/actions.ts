@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireOrgId } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { createInvoice, getInvoice, invoicePublicUrl, setInvoiceStatus } from "@/lib/db/invoices";
 import { getContact } from "@/lib/db/contacts";
 import { isWithinServiceWindow, recordMessage } from "@/lib/db/whatsapp";
@@ -14,7 +14,7 @@ function formatCents(cents: number, currency: string): string {
 }
 
 export async function createInvoiceAction(formData: FormData) {
-  const orgId = await requireOrgId();
+  const orgId = await requireManager();
   const contactId = String(formData.get("contactId") ?? "");
   const currency = String(formData.get("currency") ?? "USD");
   if (!contactId) throw new Error("A contact is required");
@@ -41,7 +41,7 @@ export async function createInvoiceAction(formData: FormData) {
 }
 
 export async function sendInvoiceWhatsappAction(invoiceId: string) {
-  const orgId = await requireOrgId();
+  const orgId = await requireManager();
 
   const invoice = await getInvoice(orgId, invoiceId);
   if (!invoice) throw new Error("Invoice not found");

@@ -1,4 +1,4 @@
-import { requireOrgId } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { listContacts } from "@/lib/db/contacts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ function defaultDueDate(): string {
 }
 
 export default async function NewInvoicePage() {
-  const orgId = await requireOrgId();
+  const orgId = await requireManager();
   const contacts = await listContacts(orgId);
 
   return (

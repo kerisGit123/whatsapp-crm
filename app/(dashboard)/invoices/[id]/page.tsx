@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireOrgId } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { getInvoice } from "@/lib/db/invoices";
 import { getContact } from "@/lib/db/contacts";
 import { Card } from "@/components/ui/card";
@@ -18,7 +18,7 @@ export default async function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const orgId = await requireOrgId();
+  const orgId = await requireManager();
   const invoice = await getInvoice(orgId, id);
   if (!invoice) notFound();
 

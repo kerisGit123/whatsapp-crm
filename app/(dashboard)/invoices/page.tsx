@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireOrgId } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { listInvoices } from "@/lib/db/invoices";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ function formatCents(cents: number, currency: string): string {
 }
 
 export default async function InvoicesPage() {
-  const orgId = await requireOrgId();
+  const orgId = await requireManager();
   const invoices = await listInvoices(orgId);
 
   return (

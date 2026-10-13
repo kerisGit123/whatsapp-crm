@@ -9,6 +9,7 @@ import { requireManager, requireOrgId } from "@/lib/auth";
 import { batchExists, getSettings, insertMovements, loadItemsByIds, loadStockData, todayIso, type MovementInput } from "@/lib/db/stock";
 import { loadOrder, nextOrderNumber } from "@/lib/db/stock-orders";
 import { defaultExpiry, type StockItem } from "@/lib/stock/rules";
+import { bookPurchaseExpense } from "@/lib/db/money";
 import { normalizePhone, orderProgress, orderStatusFor, type OrderLine, type StockOrder } from "@/lib/stock/orders";
 
 type Result = { ok: boolean; message: string; id?: string };
@@ -190,6 +191,17 @@ export async function receiveOrderAction(input: ReceiveInput): Promise<Result> {
       };
     });
   await insertMovements(orgId, await actor(), list);
+  await bookPurchaseExpense(
+    orgId,
+    batch,
+    lines
+      .filter((l) => l.units > 0)
+      .map((l) => {
+        const item = items.get(l.itemId) as StockItem;
+        return { item, units: l.units, unitCost: (l.cartonPrice ?? ordered.get(l.itemId)?.cartonPrice ?? item.cartonPrice) / (item.unitsPerCarton || 1) };
+      }),
+    { date: input.date, supplier: order.supplier, reference },
+  );
 
   // Lines that will not come any more stop counting as on order.
   const closing = new Set(lines.filter((l) => l.close).map((l) => l.itemId));

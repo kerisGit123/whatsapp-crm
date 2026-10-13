@@ -11,6 +11,7 @@ import {
   integer,
   numeric,
   date,
+  boolean,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -297,3 +298,58 @@ export const workspaceInvites = pgTable(
 export type WorkspaceRow = typeof workspaces.$inferSelect;
 export type WorkspaceMemberRow = typeof workspaceMembers.$inferSelect;
 export type WorkspaceInviteRow = typeof workspaceInvites.$inferSelect;
+
+// ------------------------------------------------------------ Money out / in
+// Amounts are plain numeric (RM unless `currency` says otherwise).
+
+export const expenses = pgTable(
+  "expenses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: text("org_id").notNull(),
+    name: text("name").notNull(),
+    expenseDate: date("expense_date", { mode: "string" }).notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2, mode: "number" }).notNull(),
+    currency: text("currency").notNull().default("MYR"),
+    category: text("category").notNull().default("OTHER"),
+    paidTo: text("paid_to").notNull().default(""),
+    method: text("method").notNull().default("OTHER"),
+    noBillNeeded: boolean("no_bill_needed").notNull().default(false),
+    repeatEvery: text("repeat_every").notNull().default("NONE"), // NONE | MONTHLY | QUARTERLY | HALF_YEARLY | YEARLY
+    repeatHandled: boolean("repeat_handled").notNull().default(false),
+    notes: text("notes").notNull().default(""),
+    // "stock:<batch>" for an expense booked from a stock delivery, else null.
+    source: text("source"),
+    propertyId: uuid("property_id"), // set once properties exist (rentals phase)
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("expenses_org_date_idx").on(t.orgId, t.expenseDate),
+    index("expenses_org_source_idx").on(t.orgId, t.source),
+  ],
+);
+
+/** Money in that is not a rent receipt: late fees, repairs charged back, a branch paying for lent stock... */
+export const incomes = pgTable(
+  "incomes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: text("org_id").notNull(),
+    name: text("name").notNull(),
+    incomeDate: date("income_date", { mode: "string" }).notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2, mode: "number" }).notNull(),
+    currency: text("currency").notNull().default("MYR"),
+    category: text("category").notNull().default("OTHER"),
+    receivedFrom: text("received_from").notNull().default(""),
+    method: text("method").notNull().default("OTHER"),
+    notes: text("notes").notNull().default(""),
+    source: text("source"), // "borrow:<movement id>" when it settles lent stock
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("incomes_org_date_idx").on(t.orgId, t.incomeDate)],
+);
+
+export type ExpenseRow = typeof expenses.$inferSelect;
+export type IncomeRow = typeof incomes.$inferSelect;

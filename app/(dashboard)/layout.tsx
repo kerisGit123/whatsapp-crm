@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
-import { Users, FileText, MessageCircle, ShieldCheck, Package, UserCog, Phone } from "lucide-react";
+import { Users, FileText, MessageCircle, ShieldCheck, Package, UserCog, Phone, Wallet } from "lucide-react";
 import { isPlatformAdmin } from "@/lib/auth";
 import { activeWorkspace, claimInvites, myWorkspaces } from "@/lib/workspace";
 import { WorkspaceSwitcher } from "@/components/workspace-forms";
@@ -24,7 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const nav = [
     { href: "/stock", label: "Stock", icon: Package },
     { href: "/contacts", label: "Contacts", icon: Users },
-    ...(current.role !== "staff" ? [{ href: "/invoices", label: "Invoices", icon: FileText }] : []),
+    ...(current.role !== "staff" ? [{ href: "/invoices", label: "Invoices", icon: FileText }, { href: "/money", label: "Money", icon: Wallet }] : []),
     ...(current.role === "owner" ? [{ href: "/members", label: "Team", icon: UserCog }, { href: "/whatsapp", label: "WhatsApp setup", icon: Phone }] : []),
     ...(admin ? [{ href: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];

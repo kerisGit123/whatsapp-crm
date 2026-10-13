@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { stockMovements, stockRequests } from "@/lib/db/schema";
+import { incomes, stockMovements, stockRequests } from "@/lib/db/schema";
 import { requireManager, requireOrgId } from "@/lib/auth";
 import { batchExists, getSettings, insertMovements, loadItemsByIds, todayIso, type MovementInput } from "@/lib/db/stock";
 import { loadRequest, nextRequestNumber } from "@/lib/db/stock-orders";
@@ -221,12 +221,21 @@ export async function settleBorrowAction(input: {
   } else if (input.how === "PAID") {
     const amount = num(input.amount);
     if (!(amount > 0)) return fail("How much was paid?");
-    // No income ledger in this app yet (Transactions come in a later phase): keep the amount on the line.
-    await db.update(stockMovements).set({ notes: [borrow.notes, `Paid RM ${amount.toFixed(2)} on ${date}${notes ? `: ${notes}` : ""}`].filter(Boolean).join(" | ") }).where(eq(stockMovements.id, borrow.id));
+    // The payment is money in, under Money.
+    await db.insert(incomes).values({
+      orgId,
+      name: `Paid for ${item.name} lent (${cartonsAndUnits(borrow.quantity, item)})`,
+      incomeDate: date,
+      amount,
+      category: "BUSINESS",
+      receivedFrom: borrow.party,
+      notes,
+      source: `borrow:${borrow.id}`,
+    });
   } else {
     return fail("Choose returned, exchanged or paid.");
   }
   await db.update(stockMovements).set({ borrowStatus: input.how }).where(eq(stockMovements.id, borrow.id));
   refresh();
-  return done(input.how === "PAID" ? "Settled: payment noted on the lending." : "Settled and added back to stock.");
+  return done(input.how === "PAID" ? "Settled. The payment is recorded under Money in." : "Settled and added back to stock.");
 }

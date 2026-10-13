@@ -18,6 +18,7 @@ import {
   type MovementInput,
 } from "@/lib/db/stock";
 import { balanceOf, cartonsAndUnits, defaultExpiry, unitPrice } from "@/lib/stock/rules";
+import { bookPurchaseExpense, resyncPurchaseExpense } from "@/lib/db/money";
 import { STOCK_GROUPS, WASTE_REASONS } from "@/lib/stock/types";
 
 export type Result = { ok: boolean; message: string; id?: string };
@@ -193,6 +194,19 @@ export async function recordAction(input: RecordInput): Promise<Result> {
       return { itemId: item.id, data };
     }),
   );
+  // A delivery is money out: book it under Money (managers see it there).
+  if (type === "PURCHASE") {
+    await bookPurchaseExpense(
+      orgId,
+      requestId,
+      lines.map((line) => {
+        const item = items.get(text(line.itemId, 64))!;
+        const cost = line.unitCost === undefined || line.unitCost === null || line.unitCost === "" ? NaN : num(line.unitCost);
+        return { item, units: num(line.quantity), unitCost: cost >= 0 ? cost : unitPrice(item) };
+      }),
+      { date: input.date, supplier: text(input.party, 120), reference: text(input.reference, 120) },
+    );
+  }
   refresh();
   return done(`Recorded ${lines.length} line${lines.length === 1 ? "" : "s"}.`);
 }
@@ -239,13 +253,14 @@ export async function stockTakeAction(input: { date?: string; requestId?: string
 export async function deleteMovementAction(movementId: string): Promise<Result> {
   const orgId = await requireManager(); // staff cannot remove recorded lines
   const [m] = await db
-    .select({ id: stockMovements.id, date: stockMovements.movementDate })
+    .select({ id: stockMovements.id, date: stockMovements.movementDate, type: stockMovements.type, batchId: stockMovements.batchId })
     .from(stockMovements)
     .where(and(eq(stockMovements.orgId, orgId), eq(stockMovements.id, movementId)));
   if (!m) return fail("Movement not found.");
   const locked = lockedMessage((await getSettings(orgId)).lockedThrough, m.date);
   if (locked) return fail(locked);
   await db.update(stockMovements).set({ deletedAt: new Date() }).where(eq(stockMovements.id, movementId));
+  if (m.type === "PURCHASE" && m.batchId) await resyncPurchaseExpense(orgId, m.batchId);
   refresh();
   return done("Removed.");
 }

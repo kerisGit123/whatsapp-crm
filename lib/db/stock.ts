@@ -16,6 +16,8 @@ export type MovementInput = {
   borrowStatus?: string | null;
   reason?: string | null;
   batchId?: string | null;
+  orderId?: string | null;
+  borrowId?: string | null;
 };
 
 export const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -154,6 +156,8 @@ export async function insertMovements(orgId: string, recordedBy: string, list: A
         borrowStatus: data.borrowStatus ?? null,
         reason: data.reason ?? null,
         batchId: data.batchId ?? null,
+        orderId: data.orderId ?? null,
+        borrowId: data.borrowId ?? null,
         recordedBy,
       })),
     );

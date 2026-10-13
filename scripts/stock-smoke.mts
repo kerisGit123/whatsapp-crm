@@ -3,7 +3,9 @@
 //   node --env-file=.env.local --import tsx scripts/stock-smoke.mts
 import { eq } from "drizzle-orm";
 import { db } from "../lib/db";
-import { stockItems, stockMovements, stockSettings } from "../lib/db/schema";
+import { stockItems, stockMovements, stockOrders, stockSettings } from "../lib/db/schema";
+import { loadOrders, nextOrderNumber } from "../lib/db/stock-orders";
+import { onOrderUnits, orderProgress, orderStatusFor } from "../lib/stock/orders";
 import { batchExists, insertMovements, loadStockData, todayIso } from "../lib/db/stock";
 import { balanceOf, cartonsAndUnits, stockStatus } from "../lib/stock/rules";
 
@@ -48,11 +50,33 @@ try {
   const after = await loadStockData(orgId);
   check("soft-deleted line ignored (balance 10)", balanceOf(after.byItem.get(item.id) ?? []) === 10);
 
+
+  // Orders: draft -> sent -> part received -> rest closed.
+  const number = await nextOrderNumber(orgId, "2026");
+  check("first order number", number === "ORD-2026-0001", number);
+  const [order] = await db
+    .insert(stockOrders)
+    .values({ orgId, number, supplier: "Acme", orderDate: today, status: "SENT", lines: [{ itemId: item.id, orderedUnits: 32, cartonPrice: 160 }] })
+    .returning();
+  check("next order number", (await nextOrderNumber(orgId, "2026")) === "ORD-2026-0002");
+  let orders = await loadOrders(orgId);
+  let fresh = await loadStockData(orgId);
+  check("on order 32 before delivery", onOrderUnits(orders, fresh.movements).get(item.id) === 32);
+  await insertMovements(orgId, "Test", [{ itemId: item.id, data: { date: today, type: "PURCHASE", quantity: 24, unitCost: 20, orderId: order.id, batchId: "rcv1" } }]);
+  fresh = await loadStockData(orgId);
+  let progress = orderProgress(orders[0], fresh.movements);
+  check("24 received, 8 outstanding", progress.received === 24 && progress.outstanding === 8, `${progress.received}/${progress.outstanding}`);
+  check("status PARTLY_RECEIVED", orderStatusFor(orders[0], progress.lines) === "PARTLY_RECEIVED");
+  const closed = { ...orders[0], lines: orders[0].lines.map((l) => ({ ...l, closed: true })) };
+  progress = orderProgress(closed, fresh.movements);
+  check("closing the rest -> RECEIVED", orderStatusFor(closed, progress.lines) === "RECEIVED");
+
   // Other workspaces never see these rows.
   const other = await loadStockData("org_someone_else");
   check("other workspace sees nothing", other.items.length === 0 && other.movements.length === 0);
 } finally {
   await db.delete(stockMovements).where(eq(stockMovements.orgId, orgId));
+  await db.delete(stockOrders).where(eq(stockOrders.orgId, orgId));
   await db.delete(stockItems).where(eq(stockItems.orgId, orgId));
   await db.delete(stockSettings).where(eq(stockSettings.orgId, orgId));
 }

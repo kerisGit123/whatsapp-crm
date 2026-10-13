@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { Plus, ClipboardCheck, Zap, History, SlidersHorizontal } from "lucide-react";
+import { Plus, ClipboardCheck, Zap, History, SlidersHorizontal, Truck } from "lucide-react";
 import { getRole, requireOrgId } from "@/lib/auth";
 import { loadStockData, todayIso } from "@/lib/db/stock";
+import { loadOrders } from "@/lib/db/stock-orders";
+import { onOrderUnits, orderAttention } from "@/lib/stock/orders";
 import { cartonsAndUnits, expiryState, stockStatus, type StockFlag } from "@/lib/stock/rules";
 import { stockGroupLabel } from "@/lib/stock/types";
 import { buttonVariants } from "@/components/ui/button";
@@ -31,11 +33,13 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
   const orgId = await requireOrgId();
   const role = await getRole();
   const today = todayIso();
-  const { items, byItem, rule } = await loadStockData(orgId);
+  const [{ items, byItem, movements, rule }, orders] = await Promise.all([loadStockData(orgId), loadOrders(orgId)]);
+  const onOrder = onOrderUnits(orders, movements);
+  const lateOrders = orders.filter((o) => orderAttention(o, movements, today, rule.leadDays ?? 0) !== null).length;
 
   const all = items
     .filter((i) => i.status !== "DISCONTINUED")
-    .map((item) => stockStatus(item, byItem.get(item.id) ?? [], rule, today));
+    .map((item) => stockStatus(item, byItem.get(item.id) ?? [], rule, today, onOrder.get(item.id) ?? 0));
 
   const needle = q.trim().toLowerCase();
   const rows = all
@@ -56,6 +60,9 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         <Link href="/stock/take" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
           <ClipboardCheck /> Stock take
         </Link>
+        <Link href="/stock/orders" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+          <Truck /> Orders
+        </Link>
         <Link href="/stock/history" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
           <History /> History
         </Link>
@@ -70,6 +77,12 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
           </>
         ) : null}
       </div>
+
+      {lateOrders > 0 ? (
+        <Link href="/stock/orders" className="mb-4 block rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          {lateOrders} order{lateOrders === 1 ? " needs" : "s need"} a look: goods are late or only partly arrived.
+        </Link>
+      ) : null}
 
       <div className="mb-4 grid grid-cols-3 gap-2 text-sm">
         <div className="rounded-lg border p-3">

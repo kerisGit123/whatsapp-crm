@@ -186,3 +186,58 @@ export const stockSettings = pgTable("stock_settings", {
 export type StockItemRow = typeof stockItems.$inferSelect;
 export type StockMovementRow = typeof stockMovements.$inferSelect;
 export type StockSettingsRow = typeof stockSettings.$inferSelect;
+
+/** Our order to one supplier. `lines` is a JSON list (see lib/stock/orders.ts). */
+export const stockOrders = pgTable(
+  "stock_orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: text("org_id").notNull(),
+    number: text("number").notNull(), // ORD-2026-0001
+    supplier: text("supplier").notNull().default(""),
+    supplierPhone: text("supplier_phone").notNull().default(""),
+    supplierRef: text("supplier_ref").notNull().default(""),
+    orderDate: date("order_date", { mode: "string" }).notNull(),
+    status: text("status").notNull().default("DRAFT"), // DRAFT | SENT | PARTLY_RECEIVED | RECEIVED | CANCELLED
+    notes: text("notes").notNull().default(""),
+    lines: jsonb("lines").$type<Array<{ itemId: string; orderedUnits: number; cartonPrice: number; closed?: boolean }>>().notNull().default([]),
+    requestKey: text("request_key"), // makes a retried save idempotent
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("stock_orders_org_number_uq").on(t.orgId, t.number),
+    uniqueIndex("stock_orders_org_key_uq").on(t.orgId, t.requestKey),
+    index("stock_orders_org_status_idx").on(t.orgId, t.status),
+  ],
+);
+
+/** A branch asks the warehouse for stock. `lines` is a JSON list (lib/stock/requests.ts). */
+export const stockRequests = pgTable(
+  "stock_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: text("org_id").notNull(),
+    number: text("number").notNull(), // REQ-2026-0001
+    branch: text("branch").notNull().default(""),
+    requestDate: date("request_date", { mode: "string" }).notNull(),
+    status: text("status").notNull().default("REQUESTED"), // REQUESTED | ISSUED | RECEIVED | SHORT | CANCELLED
+    notes: text("notes").notNull().default(""),
+    requestedBy: text("requested_by").notNull().default(""),
+    issuedOn: date("issued_on", { mode: "string" }),
+    issuedBy: text("issued_by").notNull().default(""),
+    receivedOn: date("received_on", { mode: "string" }),
+    receivedBy: text("received_by").notNull().default(""),
+    lines: jsonb("lines")
+      .$type<Array<{ itemId: string; requestedUnits: number; issuedUnits?: number; receivedUnits?: number; resolved?: "RETURNED" | "WRITTEN_OFF" }>>()
+      .notNull()
+      .default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("stock_requests_org_number_uq").on(t.orgId, t.number),
+    index("stock_requests_org_status_idx").on(t.orgId, t.status),
+  ],
+);
+
+export type StockOrderRow = typeof stockOrders.$inferSelect;
+export type StockRequestRow = typeof stockRequests.$inferSelect;

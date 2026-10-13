@@ -1,30 +1,33 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { OrganizationList, OrganizationSwitcher, UserButton } from "@clerk/nextjs";
-import { Users, FileText, MessageCircle, ShieldCheck, Package } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
+import { Users, FileText, MessageCircle, ShieldCheck, Package, UserCog } from "lucide-react";
 import { isPlatformAdmin } from "@/lib/auth";
-
-const NAV = [
-  { href: "/stock", label: "Stock", icon: Package },
-  { href: "/contacts", label: "Contacts", icon: Users },
-  { href: "/invoices", label: "Invoices", icon: FileText },
-];
+import { activeWorkspace, claimInvites, myWorkspaces } from "@/lib/workspace";
+import { WorkspaceSwitcher } from "@/components/workspace-forms";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { orgId } = await auth();
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
 
-  // Everything lives inside a workspace. Until one is chosen, show the picker.
-  if (!orgId) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-        <p className="text-sm text-muted-foreground">Choose your workspace to continue</p>
-        <OrganizationList hidePersonal afterSelectOrganizationUrl="/contacts" afterCreateOrganizationUrl="/contacts" />
-      </div>
-    );
+  // Everything lives inside a workspace. A first sign-in claims any invite for this Google email.
+  let current = await activeWorkspace(userId);
+  if (!current) {
+    await claimInvites(userId);
+    current = await activeWorkspace(userId);
   }
+  if (!current) redirect("/onboarding");
 
+  const all = await myWorkspaces(userId);
   const admin = await isPlatformAdmin();
-  const nav = admin ? [...NAV, { href: "/admin", label: "Admin", icon: ShieldCheck }] : NAV;
+  const nav = [
+    { href: "/stock", label: "Stock", icon: Package },
+    { href: "/contacts", label: "Contacts", icon: Users },
+    { href: "/invoices", label: "Invoices", icon: FileText },
+    ...(current.role === "owner" ? [{ href: "/members", label: "Team", icon: UserCog }] : []),
+    ...(admin ? [{ href: "/admin", label: "Admin", icon: ShieldCheck }] : []),
+  ];
 
   return (
     <div className="flex min-h-screen">
@@ -34,15 +37,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <span className="font-semibold">Shop</span>
         </div>
         <div className="px-2 pb-2">
-          <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/contacts" />
+          <WorkspaceSwitcher current={current.companyId} all={all.map((w) => ({ companyId: w.companyId, name: w.name }))} />
         </div>
         <nav className="flex flex-col gap-0.5 px-2">
           {nav.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground/80 hover:bg-muted hover:text-foreground"
-            >
+            <Link key={href} href={href} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground/80 hover:bg-muted hover:text-foreground">
               <Icon className="size-4" />
               {label}
             </Link>
@@ -50,7 +49,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </nav>
         <div className="mt-auto flex items-center gap-2 border-t px-4 py-3">
           <UserButton />
-          <span className="text-sm text-muted-foreground">Account</span>
+          <span className="text-sm text-muted-foreground">{current.role === "owner" ? "Owner" : current.role === "manager" ? "Manager" : "Staff"}</span>
         </div>
       </aside>
       <div className="flex-1 bg-background">{children}</div>

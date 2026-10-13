@@ -243,3 +243,57 @@ export const stockRequests = pgTable(
 
 export type StockOrderRow = typeof stockOrders.$inferSelect;
 export type StockRequestRow = typeof stockRequests.$inferSelect;
+
+// ------------------------------------------------------------ Workspaces
+// Our own tenants (one per shop / company). Clerk only signs people in.
+
+export const workspaces = pgTable(
+  "workspaces",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: text("company_id").notNull(), // "ws_<uuid>": the key every other table uses as org_id
+    name: text("name").notNull(),
+    ownerId: text("owner_id").notNull(), // Clerk user id of the creator
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("workspaces_company_uq").on(t.companyId)],
+);
+
+export const workspaceMembers = pgTable(
+  "workspace_members",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: text("company_id").notNull(),
+    userId: text("user_id").notNull(), // Clerk user id
+    email: text("email").notNull().default(""),
+    name: text("name").notNull().default(""),
+    role: text("role").notNull().default("staff"), // owner | manager | staff
+    status: text("status").notNull().default("active"), // active | suspended
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("workspace_members_company_user_uq").on(t.companyId, t.userId),
+    index("workspace_members_user_idx").on(t.userId),
+  ],
+);
+
+/** Invite someone by their Google email; it is claimed the first time they sign in. */
+export const workspaceInvites = pgTable(
+  "workspace_invites",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: text("company_id").notNull(),
+    email: text("email").notNull(), // lower case
+    role: text("role").notNull().default("staff"),
+    invitedBy: text("invited_by").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    claimedByUserId: text("claimed_by_user_id"),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("workspace_invites_company_email_uq").on(t.companyId, t.email)],
+);
+
+export type WorkspaceRow = typeof workspaces.$inferSelect;
+export type WorkspaceMemberRow = typeof workspaceMembers.$inferSelect;
+export type WorkspaceInviteRow = typeof workspaceInvites.$inferSelect;

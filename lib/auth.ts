@@ -1,33 +1,51 @@
+import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { activeWorkspace, claimInvites } from "@/lib/workspace";
 
-/** Roles inside one workspace (a Clerk organization).
- *  owner / manager = Clerk "org:admin"; staff = Clerk "org:member". */
+/** Roles inside one workspace: owner and manager can do everything; staff cannot
+ *  change prices, items, rules, orders or remove records. */
 export type WorkspaceRole = "manager" | "staff";
 
-/** The tenant id every DB query must filter by: the active workspace (Clerk
- *  organization). Staff always work inside a workspace; there is no personal
- *  fallback. Never trust a client-supplied orgId — this is the only source. */
+/** The tenant id every DB query must filter by: the workspace the signed-in person is
+ *  working in. Never trust a client-supplied id: this is the only source. */
 export async function requireOrgId(): Promise<string> {
-  const { userId, orgId } = await auth();
+  return (await requireWorkspace()).companyId;
+}
+
+async function requireWorkspace() {
+  const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
-  if (!orgId) throw new Error("No workspace selected");
-  return orgId;
+  let workspace = await activeWorkspace(userId);
+  if (!workspace) {
+    // First sign-in: an invite sent to their Google email becomes a membership.
+    await claimInvites(userId);
+    workspace = await activeWorkspace(userId);
+  }
+  if (!workspace) redirect("/onboarding");
+  return workspace;
 }
 
 export async function getRole(): Promise<WorkspaceRole> {
-  const { orgRole } = await auth();
-  return orgRole === "org:admin" ? "manager" : "staff";
+  const w = await requireWorkspace();
+  return w.role === "staff" ? "staff" : "manager";
 }
 
 /** Server-side gate for actions staff must not do (prices, deletes, settings). */
 export async function requireManager(): Promise<string> {
-  const orgId = await requireOrgId();
-  if ((await getRole()) !== "manager") throw new Error("Managers only");
-  return orgId;
+  const w = await requireWorkspace();
+  if (w.role === "staff") throw new Error("Managers only");
+  return w.companyId;
 }
 
-/** Platform admin = whoever is listed in PLATFORM_ADMIN_EMAILS (comma-separated).
- *  This is the shop owner / developer, above all workspaces. */
+/** Only the owner manages people and the workspace itself. */
+export async function requireOwner(): Promise<string> {
+  const w = await requireWorkspace();
+  if (w.role !== "owner") throw new Error("Owner only");
+  return w.companyId;
+}
+
+/** Platform admin = whoever is listed in PLATFORM_ADMIN_EMAILS (comma-separated):
+ *  the shop owner / developer, above all workspaces. */
 export async function isPlatformAdmin(): Promise<boolean> {
   const allowed = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
     .split(",")

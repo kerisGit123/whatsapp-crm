@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copy one Twenty workspace's stock (items, movements, orders, requests, rule) into this app.
 //
 //   node --env-file=.env.local --import tsx scripts/migrate-from-twenty.mts --file <dump.json> --org <clerk org id>           (dry run: reads and checks, writes nothing)

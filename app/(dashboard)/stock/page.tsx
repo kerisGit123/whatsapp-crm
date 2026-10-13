@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, ClipboardCheck, Zap, History, SlidersHorizontal, Truck } from "lucide-react";
+import { Plus, ClipboardCheck, Zap, History, SlidersHorizontal, Truck, Store } from "lucide-react";
 import { getRole, requireOrgId } from "@/lib/auth";
 import { loadStockData, todayIso } from "@/lib/db/stock";
 import { loadOrders } from "@/lib/db/stock-orders";
@@ -60,22 +60,24 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         <Link href="/stock/take" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
           <ClipboardCheck /> Stock take
         </Link>
-        <Link href="/stock/orders" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-          <Truck /> Orders
-        </Link>
-        <Link href="/stock/history" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-          <History /> History
-        </Link>
-        {role === "manager" ? (
-          <>
-            <Link href="/stock/items/new" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-              <Plus /> Add item
-            </Link>
-            <Link href="/stock/rules" className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}>
-              <SlidersHorizontal /> Rules
-            </Link>
-          </>
-        ) : null}
+        <details className="relative">
+          <summary className={cn(buttonVariants({ variant: "outline", size: "lg" }), "cursor-pointer list-none")}>More ▾</summary>
+          <div className="absolute right-0 z-20 mt-1 flex w-52 flex-col overflow-hidden rounded-lg border bg-background py-1 shadow-lg">
+            {[
+              { href: "/stock/orders", label: "Orders to suppliers", icon: Truck, show: true },
+              { href: "/stock/requests", label: "Branch requests", icon: Store, show: true },
+              { href: "/stock/history", label: "History", icon: History, show: true },
+              { href: "/stock/items/new", label: "Add item", icon: Plus, show: role === "manager" },
+              { href: "/stock/rules", label: "Re-order rules", icon: SlidersHorizontal, show: role === "manager" },
+            ]
+              .filter((l) => l.show)
+              .map(({ href, label, icon: Icon }) => (
+                <Link key={href} href={href} className="flex items-center gap-2 px-3 py-3 text-sm hover:bg-muted">
+                  <Icon className="size-4" /> {label}
+                </Link>
+              ))}
+          </div>
+        </details>
       </div>
 
       {lateOrders > 0 ? (

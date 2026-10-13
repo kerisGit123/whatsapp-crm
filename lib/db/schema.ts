@@ -227,6 +227,7 @@ export const stockRequests = pgTable(
     issuedBy: text("issued_by").notNull().default(""),
     receivedOn: date("received_on", { mode: "string" }),
     receivedBy: text("received_by").notNull().default(""),
+    requestKey: text("request_key"), // makes a retried save idempotent
     lines: jsonb("lines")
       .$type<Array<{ itemId: string; requestedUnits: number; issuedUnits?: number; receivedUnits?: number; resolved?: "RETURNED" | "WRITTEN_OFF" }>>()
       .notNull()
@@ -235,6 +236,7 @@ export const stockRequests = pgTable(
   },
   (t) => [
     uniqueIndex("stock_requests_org_number_uq").on(t.orgId, t.number),
+    uniqueIndex("stock_requests_org_key_uq").on(t.orgId, t.requestKey),
     index("stock_requests_org_status_idx").on(t.orgId, t.status),
   ],
 );

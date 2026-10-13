@@ -28,11 +28,13 @@ export function QuickForm({
   balances,
   initialKind,
   initialItem,
+  showPrices,
 }: {
   items: StockItem[];
   balances: Record<string, number>;
   initialKind: Kind;
   initialItem?: string;
+  showPrices: boolean;
 }) {
   const [kind, setKind] = useState<Kind>(initialKind);
   const [date, setDate] = useState(todayLocal());
@@ -154,7 +156,7 @@ export function QuickForm({
                     How many ({item.unit || "units"})
                     <input value={l.qty} onChange={(e) => patch(index, { qty: e.target.value })} inputMode="decimal" className={input} />
                   </label>
-                  {kind === "PURCHASE" ? (
+                  {kind === "PURCHASE" && showPrices ? (
                     <label className="text-xs text-muted-foreground">
                       Price per {item.unit || "unit"} (RM)
                       <input value={l.cost} onChange={(e) => patch(index, { cost: e.target.value })} inputMode="decimal" placeholder={(item.cartonPrice / (item.unitsPerCarton || 1)).toFixed(2)} className={input} />

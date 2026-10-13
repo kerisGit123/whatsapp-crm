@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireOrgId } from "@/lib/auth";
+import { getRole, requireOrgId } from "@/lib/auth";
 import { loadStockData } from "@/lib/db/stock";
 import { loadRequest } from "@/lib/db/stock-orders";
 import { balanceOf } from "@/lib/stock/rules";
@@ -14,7 +14,10 @@ export default async function EditRequestPage({ params }: { params: Promise<{ id
   const request = await loadRequest(orgId, id);
   if (!request) notFound();
   if (request.status !== "REQUESTED") redirect(`/stock/requests/${id}`);
-  const { items, byItem } = await loadStockData(orgId);
+  const role = await getRole();
+  const loaded = await loadStockData(orgId);
+  const { byItem } = loaded;
+  const items = role === "manager" ? loaded.items : loaded.items.map((i) => ({ ...i, cartonPrice: 0, avgUnitCost: null }));
   const balances = Object.fromEntries(items.map((i) => [i.id, balanceOf(byItem.get(i.id) ?? [])]));
 
   return (

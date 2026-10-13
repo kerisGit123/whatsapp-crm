@@ -1,22 +1,42 @@
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
-import { Users, FileText, MessageCircle } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
+import { OrganizationList, OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { Users, FileText, MessageCircle, ShieldCheck } from "lucide-react";
+import { isPlatformAdmin } from "@/lib/auth";
 
 const NAV = [
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/invoices", label: "Invoices", icon: FileText },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { orgId } = await auth();
+
+  // Everything lives inside a workspace. Until one is chosen, show the picker.
+  if (!orgId) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+        <p className="text-sm text-muted-foreground">Choose your workspace to continue</p>
+        <OrganizationList hidePersonal afterSelectOrganizationUrl="/contacts" afterCreateOrganizationUrl="/contacts" />
+      </div>
+    );
+  }
+
+  const admin = await isPlatformAdmin();
+  const nav = admin ? [...NAV, { href: "/admin", label: "Admin", icon: ShieldCheck }] : NAV;
+
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-56 shrink-0 flex-col border-r bg-muted/30">
         <div className="flex items-center gap-2 px-4 py-4">
           <MessageCircle className="size-5 text-primary" />
-          <span className="font-semibold">WhatsApp CRM</span>
+          <span className="font-semibold">Shop</span>
+        </div>
+        <div className="px-2 pb-2">
+          <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/contacts" />
         </div>
         <nav className="flex flex-col gap-0.5 px-2">
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {nav.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}

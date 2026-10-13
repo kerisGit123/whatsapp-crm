@@ -22,6 +22,7 @@ export default async function RulesPage() {
       <p className="mb-4 text-sm text-muted-foreground">
         These decide the &quot;Order now&quot; flag and the suggested order. One item can have its own months on its edit page.
       </p>
+      <p className="mb-4 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">Workspace id (for support and data moves): <code className="select-all">{orgId}</code></p>
       <RulesForm reorderBelow={rule.reorderBelow} orderUpTo={rule.orderUpTo} leadDays={rule.leadDays ?? 0} />
     </div>
   );

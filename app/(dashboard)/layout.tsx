@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { OrganizationList, OrganizationSwitcher, UserButton } from "@clerk/nextjs";
-import { Users, FileText, MessageCircle, ShieldCheck } from "lucide-react";
+import { Users, FileText, MessageCircle, ShieldCheck, Package } from "lucide-react";
 import { isPlatformAdmin } from "@/lib/auth";
 
 const NAV = [
+  { href: "/stock", label: "Stock", icon: Package },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/invoices", label: "Invoices", icon: FileText },
 ];

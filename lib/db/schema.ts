@@ -9,6 +9,8 @@ import {
   timestamp,
   jsonb,
   integer,
+  numeric,
+  date,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -113,3 +115,74 @@ export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 export type NewWhatsappMessage = typeof whatsappMessages.$inferInsert;
 export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
+
+// ---------------------------------------------------------------- Stock (F&B)
+// Every quantity is in inner units (bag, bottle, pcs). Money is plain numeric RM.
+
+export const stockItems = pgTable(
+  "stock_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: text("org_id").notNull(),
+    code: text("code").notNull().default(""),
+    name: text("name").notNull(),
+    specification: text("specification").notNull().default(""),
+    group: text("group").notNull().default("RAW"), // RAW | PACKAGING | OTHER | MERCH
+    unit: text("unit").notNull().default(""),
+    unitsPerCarton: numeric("units_per_carton", { precision: 12, scale: 2, mode: "number" }).notNull().default(1),
+    cartonPrice: numeric("carton_price", { precision: 12, scale: 2, mode: "number" }).notNull().default(0),
+    supplier: text("supplier").notNull().default(""),
+    status: text("status").notNull().default("ACTIVE"), // ACTIVE | DISCONTINUED
+    reorderBelowMonths: numeric("reorder_below_months", { precision: 6, scale: 2, mode: "number" }),
+    shelfLifeDays: integer("shelf_life_days"),
+    notes: text("notes").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("stock_items_org_idx").on(t.orgId, t.status)],
+);
+
+export const stockMovements = pgTable(
+  "stock_movements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: text("org_id").notNull(),
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => stockItems.id, { onDelete: "restrict" }),
+    movementDate: date("movement_date", { mode: "string" }).notNull(),
+    type: text("type").notNull(), // PURCHASE | TAKE | BORROW | RETURN | EXCHANGE_IN | WASTE | ADJUST_IN | ADJUST_OUT
+    quantity: numeric("quantity", { precision: 14, scale: 2, mode: "number" }).notNull(),
+    party: text("party").notNull().default(""),
+    unitCost: numeric("unit_cost", { precision: 12, scale: 4, mode: "number" }),
+    expiryDate: date("expiry_date", { mode: "string" }),
+    reference: text("reference").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    borrowStatus: text("borrow_status"),
+    borrowId: text("borrow_id"),
+    batchId: text("batch_id"), // lines saved together; also the idempotency key
+    orderId: text("order_id"),
+    reason: text("reason"),
+    recordedBy: text("recorded_by").notNull().default(""),
+    // Soft delete: removed lines can be restored.
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("stock_movements_org_item_idx").on(t.orgId, t.itemId, t.movementDate),
+    index("stock_movements_batch_idx").on(t.orgId, t.batchId),
+  ],
+);
+
+/** One row per workspace: the re-order rule and the month lock. */
+export const stockSettings = pgTable("stock_settings", {
+  orgId: text("org_id").primaryKey(),
+  reorderBelow: numeric("reorder_below", { precision: 6, scale: 2, mode: "number" }).notNull().default(2),
+  orderUpTo: numeric("order_up_to", { precision: 6, scale: 2, mode: "number" }).notNull().default(2.5),
+  leadDays: integer("lead_days").notNull().default(0),
+  lockedThrough: date("locked_through", { mode: "string" }),
+});
+
+export type StockItemRow = typeof stockItems.$inferSelect;
+export type StockMovementRow = typeof stockMovements.$inferSelect;
+export type StockSettingsRow = typeof stockSettings.$inferSelect;

@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Personal Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+/* Layout concept: a yellow frame around one dark stage. A cream navigation pill hangs from the top edge, a light oversized headline sits left, and a collage of white and yellow sample cards floats beside the copy. One committed look (dark and yellow), so no theme switch. */
+:root {
+  --frame: #ffd54a;
+  --stage: #1d1c21;
+  --stage-2: #26252b;
+  --cream: #f7f3ea;
+  --paper: #ffffff;
+  --ink: #1d1c21;
+  --text: #f3efe6;
+  --muted: #a9a59c;
+  --muted-dark: #5d5a54;
+  --line: #34323a;
+  --line-light: #e6e1d4;
+  --yellow: #ffd54a;
+  --green: #bfe8c8;
+  --pink: #f6c9e3;
+  --blue: #c4cef7;
+  --orange: #ffd9b0;
+  --red: #f7b8b2;
+  --display: "Outfit", "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --body: "DM Sans", "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--frame); }
+body {
+  background: var(--frame);
+  color: var(--text);
+  font: 400 17px/1.55 var(--body);
+  padding-inline: 12px;
+  padding-block: 12px;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+a { color: inherit; }
+p { margin: 0; }
+h1, h2, h3, h4 { font-family: var(--display); font-weight: 400; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; border-radius: 8px; }
+
+.stage { background: var(--stage); border-radius: 28px; padding-inline: max(clamp(18px, 4vw, 56px), calc((100% - 1400px) / 2)); padding-bottom: 28px; overflow: hidden; }
+
+/* navigation pill with concave shoulders */
+.navwrap { display: flex; justify-content: center; }
+.nav { position: relative; background: var(--cream); color: var(--ink); border-radius: 0 0 28px 28px; padding: 16px 22px 16px 26px; display: flex; align-items: center; gap: clamp(18px, 4vw, 48px); width: min(920px, 100%); }
+.nav::before, .nav::after { content: ""; position: absolute; top: 0; width: 28px; height: 28px; }
+.nav::before { left: -28px; background: radial-gradient(circle at 0 100%, transparent 27px, var(--cream) 28px); }
+.nav::after { right: -28px; background: radial-gradient(circle at 100% 100%, transparent 27px, var(--cream) 28px); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 500 26px/1 var(--display); letter-spacing: -0.03em; flex: none; }
+.mark { width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--ink); display: grid; place-items: center; font: 600 15px/1 var(--display); }
+.nav .links { display: flex; gap: clamp(14px, 2.4vw, 30px); margin-inline: auto; font-size: 14.5px; font-weight: 500; }
+.nav .links a { text-decoration: none; color: var(--ink); opacity: .78; }
+.nav .links a:hover { opacity: 1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 50px; padding: 0 26px; border-radius: 999px; font: 500 16px/1 var(--body); text-decoration: none; border: 1.5px solid transparent; cursor: pointer; transition: transform .15s; white-space: nowrap; }
+.btn:hover { transform: translateY(-1px); }
+.btn.yellow { background: var(--yellow); color: var(--ink); }
+.btn.white { background: #fff; color: var(--ink); }
+.btn.outline { border-color: #6b6972; color: var(--text); background: transparent; }
+.btn.outline:hover { border-color: var(--yellow); }
+.btn.dark { background: var(--ink); color: var(--cream); }
+
+/* hero */
+.hero { padding-top: clamp(40px, 6vw, 80px); }
+.hero h1 { font-size: clamp(42px, 7.4vw, 92px); line-height: 1.03; letter-spacing: -0.035em; font-weight: 400; }
+.hero h1 span { display: block; }
+.hero h1 .y { color: var(--yellow); }
+.hero-row { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(28px, 4vw, 56px); margin-top: clamp(32px, 5vw, 56px); align-items: start; }
+.hero-copy p { color: var(--muted); font-size: 18px; max-width: 24em; }
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.fine { margin-top: 16px; font-size: 14px; color: var(--muted); }
+
+.collage { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; position: relative; }
+.card { background: var(--paper); color: var(--ink); border-radius: 14px; padding: 18px; box-shadow: 0 20px 40px -24px rgba(0, 0, 0, .6); min-width: 0; }
+.card h4 { font: 500 17px/1.2 var(--display); }
+.pill { display: inline-block; padding: 5px 12px; border-radius: 999px; font: 600 12.5px/1.2 var(--body); background: var(--yellow); color: var(--ink); }
+.pill.green { background: var(--green); } .pill.pink { background: var(--pink); } .pill.blue { background: var(--blue); }
+.pill.orange { background: var(--orange); } .pill.red { background: var(--red); } .pill.plain { background: #ece8dc; color: var(--muted-dark); }
+.card.prop { grid-column: 1; display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; }
+.bldg { border-radius: 10px; background:
+  repeating-linear-gradient(90deg, transparent 0 9px, rgba(255, 213, 74, .0) 9px 10px),
+  radial-gradient(circle at 20% 15%, rgba(255, 213, 74, .35), transparent 40%),
+  linear-gradient(170deg, #4a4954, #25242b); min-height: 126px; position: relative; overflow: hidden; }
+.bldg::before { content: ""; position: absolute; inset: 14px 16px; background:
+  linear-gradient(var(--stage-2) 0 0) 0 0 / 100% 100% no-repeat,
+  repeating-linear-gradient(90deg, transparent 0 12px, #ffd54a 12px 22px, transparent 22px 30px),
+  repeating-linear-gradient(0deg, transparent 0 14px, #1d1c21 14px 20px);
+  mix-blend-mode: normal; opacity: .0; }
+.bldg i { position: absolute; left: 14px; right: 14px; bottom: 0; top: 18px; background:
+  repeating-linear-gradient(90deg, #6b6a76 0 4px, transparent 4px 12px),
+  linear-gradient(#32313a, #32313a); border-radius: 6px 6px 0 0;
+  -webkit-mask: repeating-linear-gradient(0deg, #000 0 10px, transparent 10px 16px); mask: repeating-linear-gradient(0deg, #000 0 10px, transparent 10px 16px); }
+.prop .top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.tenant { margin-top: 10px; background: var(--blue); border-radius: 999px; padding: 7px 12px; font-size: 13.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stats { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-light); border-radius: 10px; font-size: 13px; }
+.stats div { padding: 7px 10px; border-bottom: 1px solid var(--line-light); display: flex; flex-direction: column; }
+.stats div:nth-child(odd) { border-right: 1px solid var(--line-light); }
+.stats div:nth-last-child(-n+2) { border-bottom: 0; }
+.stats small { color: var(--muted-dark); font-size: 11.5px; }
+.stats b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.card.signal { align-self: start; background: var(--yellow); display: flex; flex-direction: column; justify-content: space-between; gap: 14px; min-height: 142px; }
+.card.signal .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card.signal .pill { background: #fff3b8; }
+.avatars { display: flex; align-items: center; }
+.avatars i { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--yellow); margin-left: -6px; display: grid; place-items: center; font: 600 12px/1 var(--body); font-style: normal; color: var(--ink); }
+.avatars i:first-child { margin-left: 0; }
+.card.signal a { font-weight: 500; text-decoration: none; font-size: 15px; }
+.card.budget { grid-column: 1; }
+.bars { display: flex; gap: 6px; margin: 12px 0; }
+.bars i { height: 9px; border-radius: 99px; display: block; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.card.rank { grid-column: 2; grid-row: 2 / span 2; margin-top: -72px; }
+.card.rank .head { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; font-size: 12.5px; color: var(--muted-dark); padding: 12px 0 8px; }
+.rank .item { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line-light); }
+.rank .n { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; font-weight: 600; }
+.rank .item b { font-weight: 500; display: block; font-size: 14.5px; line-height: 1.25; }
+.rank .item small { color: var(--muted-dark); font-size: 12.5px; }
+.sample-note { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+/* sections */
+.block { padding-top: clamp(64px, 8vw, 112px); }
+.block h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; max-width: 15em; }
+.block .sub { color: var(--muted); font-size: 18px; margin-top: 16px; max-width: 36em; }
+.label { display: inline-block; color: var(--yellow); font: 500 14px/1 var(--body); margin-bottom: 18px; }
+
+.tabs { display: flex; gap: 8px; margin-top: 36px; overflow-x: auto; padding-bottom: 6px; }
+.tab { flex: none; background: transparent; color: var(--text); border: 1.5px solid #46444d; border-radius: 999px; padding: 12px 20px; font: 500 15.5px/1 var(--body); cursor: pointer; transition: border-color .15s, background .15s; }
+.tab:hover { border-color: var(--yellow); }
+.tab[aria-selected="true"] { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.module { margin-top: 24px; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+.module h3 { font-size: clamp(26px, 3.2vw, 38px); line-height: 1.1; }
+.module .desc { color: var(--muted); margin-top: 14px; }
+.module ul { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; }
+.module li { padding-left: 26px; position: relative; }
+.module li::before { content: ""; position: absolute; left: 0; top: .5em; width: 12px; height: 12px; border-radius: 50%; background: var(--yellow); }
+.demo { background: var(--paper); color: var(--ink); border-radius: 16px; overflow: hidden; box-shadow: 0 24px 48px -28px rgba(0, 0, 0, .7); min-width: 0; }
+.demo .bar { display: flex; justify-content: space-between; gap: 12px; padding: 14px 18px; background: var(--cream); font-size: 13.5px; color: var(--muted-dark); flex-wrap: wrap; font-weight: 500; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 440px; }
+th, td { padding: 12px 18px; text-align: left; border-top: 1px solid var(--line-light); white-space: nowrap; }
+th { font-weight: 500; font-size: 13px; color: var(--muted-dark); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.rows > div { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 18px; border-top: 1px solid var(--line-light); flex-wrap: wrap; }
+.rows .l { min-width: 0; font-weight: 500; }
+.rows .l small { display: block; color: var(--muted-dark); font-weight: 400; font-size: 13px; }
+.rows .r { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.meter { height: 8px; width: 130px; background: #ece8dc; border-radius: 99px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: #6bbf86; border-radius: 99px; }
+.meter i.low { background: #f0a24a; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fields > div { padding: 14px 18px; border-top: 1px solid var(--line-light); }
+.fields > div:nth-child(odd) { border-right: 1px solid var(--line-light); }
+.fields small { display: block; color: var(--muted-dark); font-size: 12.5px; margin-bottom: 3px; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; }
+.cards .c { border: 1px solid var(--line-light); border-radius: 12px; padding: 14px; background: #fffdf8; }
+.cards h4 { font: 500 16px/1.2 var(--display); }
+.cards p { color: var(--muted-dark); font-size: 14px; margin-top: 2px; }
+.cards .row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.notes { padding: 16px 18px; display: grid; gap: 16px; }
+.note { border-left: 3px solid var(--yellow); padding-left: 12px; }
+.note small { color: var(--muted-dark); display: block; font-size: 13px; }
+
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 40px; }
+.trio > div { background: var(--stage-2); border-radius: 18px; padding: 26px; }
+.trio h3 { font-size: 24px; }
+.trio p { margin-top: 12px; color: var(--muted); font-size: 16px; }
+.trio .dot { width: 14px; height: 14px; border-radius: 50%; margin-bottom: 20px; }
+
+.closing { margin-top: clamp(64px, 8vw, 112px); background: var(--yellow); color: var(--ink); border-radius: 24px; padding: clamp(28px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: center; }
+.closing h2 { font-size: clamp(32px, 5vw, 62px); line-height: 1.04; }
+.closing p { margin-top: 14px; max-width: 30em; opacity: .8; }
+footer { padding: 32px 4px 8px; color: var(--muted); font-size: 14px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 920px) {
+  .hero-row { grid-template-columns: minmax(0, 1fr); }
+  .module { grid-template-columns: minmax(0, 1fr); }
+  .trio { grid-template-columns: minmax(0, 1fr); }
+  .closing { grid-template-columns: minmax(0, 1fr); }
+  .nav .links { display: none; }
+  .nav { justify-content: space-between; }
+}
+@media (max-width: 560px) {
+  .collage { grid-template-columns: minmax(0, 1fr); }
+  .card.prop, .card.budget, .card.rank { grid-column: 1; grid-row: auto; margin-top: 0; }
+  .cards, .fields { grid-template-columns: minmax(0, 1fr); }
+  .fields > div:nth-child(odd) { border-right: 0; }
+  .card.prop { grid-template-columns: 72px minmax(0, 1fr); }
+  .brand { font-size: 22px; }
+  .btn { padding: 0 20px; }
+}
+</style>
+
+</head>
+<body>
+<div class="stage">
+  <div class="navwrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="#top" id="top"><span class="mark" aria-hidden="true">H</span>Personal Agent</a>
+      <div class="links">
+        <a href="#what">What it does</a>
+        <a href="#team">Your team</a>
+        <a href="#start">Get started</a>
+      </div>
+      <a class="btn yellow" href="https://twenty-production-d8ec.up.railway.app" data-app>Sign in</a>
+    </nav>
+  </div>
+
+  <main class="hero">
+    <h1><span>Collect the rent.</span><span>Count the stock.</span><span class="y">File the paperwork.</span></h1>
+
+    <div class="hero-row">
+      <div class="hero-copy">
+        <p>Personal Agent keeps your rentals, expenses, documents, stock, properties, contacts and notes in one place, so a single sign-in covers the whole week.</p>
+        <div class="cta-row">
+          <a class="btn outline" href="#what">See what it does</a>
+          <a class="btn white" href="https://twenty-production-d8ec.up.railway.app" data-app>Sign in with Google</a>
+        </div>
+        <p class="fine">Sign-in is by invitation. Ask the owner to add your Google email.</p>
+      </div>
+
+      <div class="collage" aria-label="Sample screens">
+        <div class="card prop">
+          <div class="bldg" aria-hidden="true"><i></i></div>
+          <div>
+            <div class="top"><h4>Unit 12-3, Menara Sample</h4><span class="pill">Occupied</span></div>
+            <div class="tenant">Tenant: Aisyah Rahman</div>
+            <div class="stats">
+              <div><small>Rent</small><b>RM 1,800.00</b></div>
+              <div><small>Deposit</small><b>RM 3,600.00</b></div>
+              <div><small>Due</small><b>1 Oct</b></div>
+              <div><small>Paid</small><b>3 Oct, DuitNow</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card signal">
+          <div class="row"><h4>Rent collected</h4><span class="pill">6 of 7 paid</span></div>
+          <div class="avatars" aria-hidden="true">
+            <i style="background:#c4cef7">AR</i><i style="background:#bfe8c8">LK</i><i style="background:#f6c9e3">RK</i><i style="background:#ffd9b0">TW</i><i style="background:#fff3b8">SM</i><i style="background:#1d1c21;color:#fff">7</i>
+          </div>
+          <a href="#what">See the ledger &rsaquo;</a>
+        </div>
+
+        <div class="card budget">
+          <h4>Where the money went</h4>
+          <div class="bars" aria-hidden="true"><i style="flex:40;background:var(--green)"></i><i style="flex:35;background:var(--pink)"></i><i style="flex:25;background:var(--blue)"></i></div>
+          <div class="pills"><span class="pill green">Stock 40%</span><span class="pill pink">Property 35%</span><span class="pill blue">Other 25%</span></div>
+        </div>
+
+        <div class="card rank">
+          <h4>Stock to order</h4>
+          <div class="head"><span>Rank</span><span>Item</span><span>Months left</span></div>
+          <div class="item"><span class="n">1</span><span><b>Syrup 1 L</b><small>Drinks</small></span><span class="pill red">0.4</span></div>
+          <div class="item"><span class="n">2</span><span><b>Cream 1 kg</b><small>Dairy, expiring</small></span><span class="pill orange">0.9</span></div>
+          <div class="item"><span class="n">3</span><span><b>Paper cup 500 pcs</b><small>Packaging</small></span><span class="pill green">1.3</span></div>
+        </div>
+        <p class="sample-note">Sample data for illustration.</p>
+      </div>
+    </div>
+  </main>
+
+  <section class="block" id="what">
+    <span class="label">What it does</span>
+    <h2>Seven jobs, one place to do them</h2>
+    <p class="sub">Pick an area to see a sample screen. All names and amounts are made up for illustration.</p>
+    <div class="tabs" role="tablist" aria-label="Areas" id="tabs"></div>
+    <div class="module" id="module" role="tabpanel" tabindex="0" aria-live="polite"></div>
+  </section>
+
+  <section class="block" id="team">
+    <span class="label">Your team</span>
+    <h2>Each business keeps its own books</h2>
+    <div class="trio">
+      <div>
+        <span class="dot" style="background:var(--green)"></span>
+        <h3>Separate workspaces</h3>
+        <p>Keep the company, the family and your personal records apart. Switch between them from the sidebar, and everything on screen follows.</p>
+      </div>
+      <div>
+        <span class="dot" style="background:var(--pink)"></span>
+        <h3>Access that fits the job</h3>
+        <p>Give staff the stock screens without the rent and the prices. Owners and managers see the full picture, and each person only sees the workspaces they are added to.</p>
+      </div>
+      <div>
+        <span class="dot" style="background:var(--blue)"></span>
+        <h3>Works from a phone</h3>
+        <p>Record stock going out, count a shelf or check who has paid rent from the phone you already carry. Download any list to Excel, or import your monthly sheet.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing" id="start">
+    <div>
+      <h2>Ready when you are</h2>
+      <p>Sign in with the Google account the owner invited and your workspaces are waiting.</p>
+    </div>
+    <a class="btn dark" href="https://twenty-production-d8ec.up.railway.app" data-app>Sign in with Google</a>
+  </section>
+
+  <footer>
+    <span>Personal Agent</span>
+    <span>Sample data on this page is for illustration only.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var APP_URL = "https://twenty-production-d8ec.up.railway.app";
+  Array.prototype.forEach.call(document.querySelectorAll("a[data-app]"), function (a) { a.href = APP_URL; });
+
+  var pill = function (cls, text) { return '<span class="pill ' + cls + '">' + text + '</span>'; };
+
+  var modules = [
+    {
+      key: "rentals", name: "Rentals",
+      title: "Know who has paid this month",
+      desc: "Every rental has a due day. Record a payment, and a numbered receipt is ready to send. Deposits are tracked from the day they come in to the day they are returned.",
+      points: ["Rent ledger by month, with paid, due and overdue at a glance", "Numbered receipts as PDF, sent by WhatsApp", "Security and utility deposits, refunds and deductions", "Yearly statements per tenant"],
+      demo: function () {
+        return '<div class="bar"><span>Rent ledger</span><span>October 2026 (sample)</span></div><div class="scroll"><table><thead><tr><th>Unit</th><th>Tenant</th><th>Due</th><th class="num">Rent (RM)</th><th>Status</th></tr></thead><tbody>' +
+          '<tr><td>12-3</td><td>Aisyah Rahman</td><td>1 Oct</td><td class="num">1,800.00</td><td>' + pill("green", "Paid 3 Oct") + '</td></tr>' +
+          '<tr><td>Shoplot A2</td><td>Lim Kopitiam</td><td>1 Oct</td><td class="num">3,200.00</td><td>' + pill("green", "Paid 1 Oct") + '</td></tr>' +
+          '<tr><td>8-10</td><td>R. Kumar</td><td>5 Oct</td><td class="num">1,450.00</td><td>' + pill("orange", "Due in 2 days") + '</td></tr>' +
+          '<tr><td>Room 2B</td><td>Tan Wei</td><td>1 Oct</td><td class="num">650.00</td><td>' + pill("red", "Overdue 6 days") + '</td></tr>' +
+          '</tbody></table></div>';
+      }
+    },
+    {
+      key: "expenses", name: "Expenses",
+      title: "Bills that remind you before they are due",
+      desc: "Log what you spend under the headings a landlord and a shop owner actually use. A bill that comes back every month or every year is suggested again when its date arrives.",
+      points: ["Categories for quit rent, assessment tax, maintenance fees and more", "Repeating bills added with one tap", "Attach the bill or receipt to the entry", "Stock deliveries are booked as expenses for you"],
+      demo: function () {
+        return '<div class="bar"><span>Money out</span><span>October 2026 (sample)</span></div><div class="rows">' +
+          '<div><div class="l">Assessment tax (cukai pintu)<small>Property taxes, every 6 months</small></div><div class="r">' + pill("orange", "Due 15 Oct") + '<span>RM 410.00</span></div></div>' +
+          '<div><div class="l">Maintenance fee, Menara Sample<small>Building charges, monthly</small></div><div class="r"><span>RM 286.00</span></div></div>' +
+          '<div><div class="l">Water<small>Bills and utilities</small></div><div class="r"><span>RM 28.40</span></div></div>' +
+          '<div><div class="l">Stock purchase, ice cream powder<small>Added from a stock delivery</small></div><div class="r"><span>RM 1,240.00</span></div></div>' +
+          '</div>';
+      }
+    },
+    {
+      key: "documents", name: "Documents",
+      title: "Contracts from a template, not from a blank page",
+      desc: "Keep the wording once and fill in the names, dates and amounts for each new tenant. The signed copy stays attached to the rental.",
+      points: ["Templates for tenancy agreements and letters", "Fields fill in from the rental: tenant, term, rent, deposit", "Record the stamping date", "Find any document from the property or the tenant"],
+      demo: function () {
+        return '<div class="bar"><span>Tenancy agreement</span><span>Draft (sample)</span></div><div class="fields">' +
+          '<div><small>Tenant</small>Aisyah Rahman</div><div><small>Property</small>Unit 12-3, Menara Sample</div>' +
+          '<div><small>Term</small>12 months from 1 Nov 2026</div><div><small>Monthly rent</small>RM 1,800.00</div>' +
+          '<div><small>Security deposit</small>RM 3,600.00</div><div><small>Stamped on</small>Not yet</div></div>';
+      }
+    },
+    {
+      key: "stock", name: "Stock",
+      title: "See what to order before you run out",
+      desc: "Every item shows how many months of stock are left at the current pace. Record what goes out in a few taps, count the shelf, and send the supplier an order that is already written.",
+      points: ["Months left, expiry dates and what to order now", "Orders to suppliers, ready to send on WhatsApp", "Requests from branches, issued and confirmed", "Stock take, month end and Excel in and out"],
+      demo: function () {
+        function r(name, sub, w, low, c) { return '<div><div class="l">' + name + '<small>' + sub + '</small></div><div class="r"><span class="meter" aria-hidden="true"><i class="' + (low ? "low" : "") + '" style="width:' + w + '%"></i></span>' + c + '</div></div>'; }
+        return '<div class="bar"><span>Stock in hand</span><span>Sample items</span></div><div class="rows">' +
+          r("Milk powder 3 kg x 8", "12 ctn (96 bag)", 62, false, pill("green", "2.0 mo left")) +
+          r("Paper cup 500 pcs", "5 ctn", 80, false, pill("green", "2.5 mo left")) +
+          r("Syrup 1 L", "3 bottle", 18, true, pill("orange", "Order now")) +
+          r("Cream 1 kg", "2 expire within 30 days", 35, true, pill("red", "Expiring")) +
+          '</div>';
+      }
+    },
+    {
+      key: "properties", name: "Properties",
+      title: "Every unit, who is in it, and what it earns",
+      desc: "One record per property with its address, rent and deposit. A property shows as occupied or vacant, and its payments, expenses and documents sit on the same page.",
+      points: ["Occupied or vacant at a glance", "Rent and deposit kept with the property", "Costs such as quit rent attached to the right unit", "Properties grouped by owner or business"],
+      demo: function () {
+        return '<div class="bar"><span>Properties</span><span>Sample</span></div><div class="cards">' +
+          '<div class="c"><h4>Unit 12-3, Menara Sample</h4><p>Apartment, Kuala Lumpur</p><div class="row">' + pill("green", "Occupied") + '<span>RM 1,800</span></div></div>' +
+          '<div class="c"><h4>Shoplot A2</h4><p>Shop, ground floor</p><div class="row">' + pill("green", "Occupied") + '<span>RM 3,200</span></div></div>' +
+          '<div class="c"><h4>8-10, Taman Contoh</h4><p>Terrace house</p><div class="row">' + pill("green", "Occupied") + '<span>RM 1,450</span></div></div>' +
+          '<div class="c"><h4>Room 2B</h4><p>Room for rent</p><div class="row">' + pill("plain", "Vacant") + '<span>RM 650</span></div></div>' +
+          '</div>';
+      }
+    },
+    {
+      key: "contacts", name: "Contacts",
+      title: "Everyone you deal with, with a phone number that works",
+      desc: "Tenants, suppliers and clients live in one list. Open a person to see their rentals, receipts and the messages you have sent them.",
+      points: ["Tenants, suppliers and clients in one list", "WhatsApp numbers saved in the right format", "Tag people so a list is one click away", "Send a message or a receipt from the contact"],
+      demo: function () {
+        return '<div class="bar"><span>Contact</span><span>Sample</span></div><div class="fields">' +
+          '<div><small>Name</small>Aisyah Rahman</div><div><small>Tag</small>' + pill("blue", "Tenant") + '</div>' +
+          '<div><small>WhatsApp</small>+60 12-345 6789</div><div><small>Rental</small>Unit 12-3, Menara Sample</div></div>';
+      }
+    },
+    {
+      key: "notes", name: "Notes",
+      title: "Write it down once, and see it again on the right day",
+      desc: "Add a note to a person or a property and set a follow-up date. What needs attention today shows on the first screen when you sign in.",
+      points: ["Notes on tenants, suppliers and properties", "Follow-up dates with a done tick", "A Today screen with what needs you", "Nothing to remember in your head"],
+      demo: function () {
+        return '<div class="bar"><span>Notes for Aisyah Rahman</span><span>Sample</span></div><div class="notes">' +
+          '<div class="note"><small>12 Oct 2026, follow up on 20 Oct</small>Asked for the air-conditioner service. Technician booked for Saturday.</div>' +
+          '<div class="note"><small>3 Oct 2026</small>October rent received by DuitNow. Receipt sent.</div>' +
+          '<div class="note"><small>1 Sep 2026</small>Renewed for 12 months. Agreement sent for stamping.</div></div>';
+      }
+    }
+  ];
+
+  var tabs = document.getElementById("tabs");
+  var panel = document.getElementById("module");
+  var current = 0;
+
+  function render(i, focusTab) {
+    current = i;
+    var m = modules[i];
+    Array.prototype.forEach.call(tabs.children, function (b, n) {
+      b.setAttribute("aria-selected", n === i ? "true" : "false");
+      b.tabIndex = n === i ? 0 : -1;
+    });
+    panel.setAttribute("aria-labelledby", "tab-" + m.key);
+    panel.innerHTML = '<div><h3>' + m.title + '</h3><p class="desc">' + m.desc + '</p><ul>' +
+      m.points.map(function (p) { return "<li>" + p + "</li>"; }).join("") + '</ul></div><div class="demo">' + m.demo() + "</div>";
+    if (focusTab) tabs.children[i].focus();
+  }
+
+  modules.forEach(function (m, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "tab"; b.id = "tab-" + m.key; b.setAttribute("role", "tab");
+    b.textContent = m.name;
+    b.addEventListener("click", function () { render(i, false); });
+    b.addEventListener("keydown", function (e) {
+      var n = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (current + 1) % modules.length;
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = (current + modules.length - 1) % modules.length;
+      if (n !== null) { e.preventDefault(); render(n, true); }
+    });
+    tabs.appendChild(b);
+  });
+  render(0, false);
+})();
+</script>
+
+</body>
+</html>
